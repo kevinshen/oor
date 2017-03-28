@@ -38,6 +38,13 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.File;
+import android.os.Environment;
+
 public class OORService extends Service implements Runnable{
 	
 	private static String 		TAG 			= "OOR DNS service";
@@ -52,6 +59,8 @@ public class OORService extends Service implements Runnable{
 	private static String 		prefix			= null;
 	private static String 		oor_path			= null;
 
+	public static File log_file = null;
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		// TODO Auto-generated method stub
@@ -60,10 +69,15 @@ public class OORService extends Service implements Runnable{
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId){
+
+		File sdcardDir = Environment.getExternalStorageDirectory();
+		log_file = new File(sdcardDir, "oor.log");
 		
 		try {
 			shell = new SuShell();
-		} catch (IOException e1) {}
+		} catch (IOException e1) {
+			Log.i(TAG, "OOR service stopped and it has been reestarted");
+		}
 		
 		
 		prefix = getPackageName();
@@ -140,7 +154,10 @@ public class OORService extends Service implements Runnable{
 			public void run() {
 				
 				String psOutput = runTask("/system/bin/ps", "", false);
+				createLogFile(psOutput);
 				isRunning = psOutput.matches("(?s)(.*)[RS]\\s[a-zA-Z0-9\\/\\.\\-]*liboor\\.so(.*)");
+				//isRunning = psOutput.matches("(?s)(.*)[RS]\\s[a-zA-Z0-9\\/\\.\\-]*org\\.openoverlayrouter\\.root(.*)");
+				// use grep -nr 'liboor.so' .
 				if (isRunning && oor_dns != null){
 					String 	dns[] = get_dns_servers();
 					if (!dns[0].equals(oor_dns[0]) || !dns[1].equals(oor_dns[1])){
@@ -150,6 +167,8 @@ public class OORService extends Service implements Runnable{
 				}
 				
 				if (isRunning == false){
+					//createLogFile(psOutput);
+					//displayMessage(psOutput, true);
 					onDestroy();
 				}
 			}
@@ -211,5 +230,48 @@ public class OORService extends Service implements Runnable{
 		return(output.toString());
 	}
 	
+
+	public void displayMessage(String message, boolean cancelAble) 
+	{		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("Attention");
+		builder.setMessage(message);
+		builder.setCancelable(cancelAble);
+		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() { 
+			public void onClick( DialogInterface dialog, int id ) {
+				dialog.dismiss();
+			}
+		} );
+		
+		if ( cancelAble ) {
+			builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() { 
+				public void onClick(DialogInterface dialog, int id) {
+					dialog.dismiss();
+				}
+			} );
+		}
+		
+		AlertDialog alert = builder.create();
+		alert.show();
+		
+	}
+
+	public void createLogFile(String message)
+	{
+		/* 
+		 * If a configuration file is not found, a default configuration file is created.
+		 * */
+		try {
+
+			FileWriter fstream = new FileWriter(log_file);
+			BufferedWriter out = new BufferedWriter(fstream);
+			out.write(message);
+			out.close();
+			
+		} catch (Exception e) {
+			//displayMessage("Error while writing Default Conf file to sdcard!!", false, null);
+		}
+		
+	}
 
 }
