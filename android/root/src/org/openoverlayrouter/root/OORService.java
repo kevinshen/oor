@@ -154,10 +154,11 @@ public class OORService extends Service implements Runnable{
 			public void run() {
 				
 				String psOutput = runTask("/system/bin/ps", "", false);
-				createLogFile(psOutput);
+				//createLogFile(psOutput);
 				isRunning = psOutput.matches("(?s)(.*)[RS]\\s[a-zA-Z0-9\\/\\.\\-]*liboor\\.so(.*)");
 				//isRunning = psOutput.matches("(?s)(.*)[RS]\\s[a-zA-Z0-9\\/\\.\\-]*org\\.openoverlayrouter\\.root(.*)");
 				// use grep -nr 'liboor.so' .
+				//createLogFile(psOutput + "\n" + isRunning);
 				if (isRunning && oor_dns != null){
 					String 	dns[] = get_dns_servers();
 					if (!dns[0].equals(oor_dns[0]) || !dns[1].equals(oor_dns[1])){

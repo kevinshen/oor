@@ -27,12 +27,24 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.File;
+import android.os.Environment;
+
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
 public class SuShell {
 	
 	private Process 			process;
 	private DataOutputStream 	stdin;
 	private BufferedReader 		stdout;
 	private BufferedReader 		stderr;
+
+	public static File log_file = null;
 	
 	
 	public SuShell() throws IOException 
@@ -41,6 +53,9 @@ public class SuShell {
 		stdin  = new DataOutputStream(process.getOutputStream());
 		stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+		File sdcardDir = Environment.getExternalStorageDirectory();
+		log_file = new File(sdcardDir, "oor.log");
 	}
 	
 	public String run(String command)
@@ -62,10 +77,43 @@ public class SuShell {
 		try {
 			stdin.writeBytes(command+"\n");
 			stdin.flush();
+
+			String s = "";
+
+			if (stdout.ready()) {
+				createLogFile(stdout.readLine());
+			}
+
+			if (stderr.ready()) {
+				createLogFile(stderr.readLine());
+			}
+			//createLogFile(stdout.readLine());
 		
 		} catch (IOException e) {
+			StringWriter errors = new StringWriter();
+			e.printStackTrace(new PrintWriter(errors));
+			createLogFile(errors.toString());
 			e.printStackTrace();
+			//createLogFile(e.getMessage());
 		}
+	}
+
+	public void createLogFile(String message)
+	{
+		/* 
+		 * If a configuration file is not found, a default configuration file is created.
+		 * */
+		try {
+
+			FileWriter fstream = new FileWriter(log_file);
+			BufferedWriter out = new BufferedWriter(fstream);
+			out.append(message);
+			out.close();
+			
+		} catch (Exception e) {
+			//displayMessage("Error while writing Default Conf file to sdcard!!", false, null);
+		}
+		
 	}
 
 }

@@ -234,7 +234,7 @@ public class OOR extends Activity implements OnClickListener {
 	
 	public void killOOR() {
 		String command = "killall liboor.so";
-		shell.run_no_output(command);
+		shell.run(command);
 		
 		oorWasRunning = false;
 		

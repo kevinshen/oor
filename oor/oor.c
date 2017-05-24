@@ -441,30 +441,46 @@ main(int argc, char **argv)
     oor_dev_type_e dev_type;
     lisp_xtr_t *tunnel_router;
 
+    OOR_LOG(LERR,"Checkpoint 1");
+
     initial_setup();
+
+    OOR_LOG(LERR,"Checkpoint 2");
 
     handle_oor_command_line(argc, argv);
 
+    OOR_LOG(LERR,"Checkpoint 3");
+
     /* see if we need to daemonize, and if so, do it */
     demonize_start();
+
+    OOR_LOG(LERR,"Checkpoint 4");
 
     /* create socket master, timer wheel, initialize interfaces */
     smaster = sockmstr_create();
     oor_timers_init();
     ifaces_init();
 
+    OOR_LOG(LERR,"Checkpoint 5");
+
     /* create control. Only one instance for now */
     if ((lctrl = ctrl_create())==NULL){
         exit_cleanup();
     }
 
+    OOR_LOG(LERR,"Checkpoint 6");
+
     /* Detect the data plane type */
     data_plane_select();
+
+    OOR_LOG(LERR,"Checkpoint 7");
 
     /* parse config and create ctrl_dev */
     if (parse_config_file() != GOOD){
         exit_cleanup();
     }
+
+    OOR_LOG(LERR,"Checkpoint 8");
 
 
     dev_type = ctrl_dev_mode(ctrl_dev);
@@ -477,15 +493,21 @@ main(int argc, char **argv)
         OOR_LOG(LDBG_1, "Data plane initialized");
     }
 
+    OOR_LOG(LERR,"Checkpoint 9");
+
     /* The control should be initialized after data plane */
     ctrl_init(lctrl);
     init_netlink();
+
+    OOR_LOG(LERR,"Checkpoint 10");
 
     /* run lisp control device xtr/ms */
     if (!ctrl_dev) {
         OOR_LOG(LDBG_1, "device NULL");
         exit(0);
     }
+
+    OOR_LOG(LERR,"Checkpoint 11");
 
     ctrl_dev_run(ctrl_dev);
 
@@ -505,6 +527,8 @@ main(int argc, char **argv)
         sockmstr_wait_on_all_read(smaster);
         sockmstr_process_all(smaster);
     }
+
+    OOR_LOG(LERR,"Checkpoint 12");
 #endif
 
     /* event_loop returned: bad! */
